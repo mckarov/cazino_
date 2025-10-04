@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Blackjack — Liquid Glass Casino</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --glass-bg: rgba(34,49,63,0.32);
+      --glass-border: rgba(255,255,255,0.18);
+      --glass-blur: 18px;
+      --main-green: #229954;
+      --main-red: #e74c3c;
+      --main-black: #111214;
+      --main-gold: #ffe066;
+      --main-white: #fff;
+      --main-shadow: 0 8px 48px 0 rgba(20,90,50,0.22);
+      --card-width: 70px;
+      --card-height: 100px;
+    }
+    html,body {
+      height:100%;
+      margin:0;
+      padding:0;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg,#1e2a38 0%, #2e4a3d 100%);
+      color:var(--main-white);
+    }
+    .container {
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:28px 18px 80px;
+    }
+    .liquid-glass {
+      background: var(--glass-bg);
+      border: 2.5px solid var(--glass-border);
+      border-radius: 18px;
+      box-shadow: var(--main-shadow);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+    }
+    header.title {
+      margin: 18px 0 14px 0;
+      font-weight: 800;
+      font-size: 2.6rem;
+      letter-spacing: 2px;
+      background: linear-gradient(180deg,#fff 0%, #ffe066 60%, #d9b94a 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 3px 12px rgba(0,0,0,.35);
+      text-align:center;
+    }
+    .game-board {
+      width:100%;
+      max-width:1100px;
+      display:grid;
+      grid-template-columns: 1fr 340px;
+      gap:28px;
+      align-items:start;
+    }
+    .table-area {
+      padding:22px;
+      border-radius:16px;
+    }
+    .table-surface {
+      background: linear-gradient(180deg, rgba(34,49,63,0.92), rgba(34,49,63,0.80));
+      padding:18px;
+      border-radius:14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+      border: 1.5px solid rgba(255,255,255,0.06);
+    }
+    .table-header {
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:12px;
+    }
+    .label { font-weight:700; color: #fff8; letter-spacing:1px; }
+
+    .seats {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:28px;
+    }
+    .player-slot {
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+    }
+    .hand {
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:6px;
+      align-items:center;
+      min-height:140px;
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 6px 18px rgba(0,0,0,0.35);
+    }
+
+    .card {
+      width: var(--card-width);
+      height: var(--card-height);
+      border-radius: 8px;
+      background: linear-gradient(180deg,#fff,#f4f4f4);
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      padding:6px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+      border: 1px solid rgba(0,0,0,0.12);
+      font-weight:700;
+      color:#111;
+    }
+    .card.back {
+      background: linear-gradient(135deg,#15373a,#0d2a2f);
+      color: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 6px);
+    }
+    .card .corner { font-size: 12px; opacity:0.9; }
+    .card .center { font-size: 22px; text-align:center; margin-top:4px; }
+    .suit.red{ color: var(--main-red); }
+    .suit.black{ color: var(--main-black); }
+
+    .controls {
+      padding:22px;
+      border-radius:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      align-items:stretch;
+    }
+    .balance, .bet-box, .action-row, .status {
+      background: rgba(255,255,255,0.02);
+      padding:12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    .bet-input {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    input[type="number"] {
+      padding:8px 10px;
+      border-radius:8px;
+      border:none;
+      font-size:1rem;
+      width:100%;
+      background: rgba(0,0,0,0.06);
+      color:var(--main-white);
+    }
+    label { font-weight:600; color:#fff8; font-size:0.95rem; }
+    button.btn {
+      padding:10px 14px;
+      border-radius:10px;
+      border:none;
+      font-weight:800;
+      letter-spacing:0.6px;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+      transition:0.2s;
+    }
+    button.btn:hover { transform:scale(1.05); }
+    button.green { background: linear-gradient(180deg,var(--main-green), #145a32); color:#fff; }
+    button.gold { background: linear-gradient(180deg,#ffe066,#f7cc35); color:#111; }
+    button.warn { background: linear-gradient(180deg,#e74c3c,#b73a2a); color:#fff; }
+    .action-row { display:flex; gap:10px; justify-content:center; }
+    .status .txt { font-weight:700; font-size:1rem; text-align:center; }
+
+    .result-popup {
+      position: fixed;
+      left: 50%;
+      top: 18%;
+      transform: translateX(-50%);
+      max-width: 680px;
+      width: calc(100% - 40px);
+      background: rgba(34,49,63,0.96);
+      color: var(--main-white);
+      border: 2px solid rgba(255,255,255,0.7);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.45);
+      z-index: 1500;
+      display:none;
+      text-align:center;
+    }
+    .back-btn {
+      margin-top:22px;
+      padding:10px 22px;
+      font-weight:700;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      color:#111;
+      background: linear-gradient(180deg,#ffe066,#f7cc35);
+      box-shadow:0 6px 14px rgba(0,0,0,0.35);
+      transition:0.2s;
+    }
+    .back-btn:hover { transform:scale(1.05); }
+
+    @media (max-width: 980px) {
+      .game-board { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="title">Blackjack</header>
+
+    <main class="game-board">
+      <!-- Table -->
+      <section class="table-area liquid-glass table-surface" id="table">
+        <div class="table-header">
+          <div class="label">Dealer</div>
+          <div class="label">Player</div>
+        </div>
+
+        <div class="seats" id="seats">
+          <div class="player-slot">
+            <div style="font-weight:700;color:#fff8;">Dealer Hand <span id="dealer-total" style="font-weight:800;margin-left:8px;color:var(--main-gold)"></span></div>
+            <div class="hand" id="dealer-hand"></div>
+          </div>
+
+          <div class="player-slot">
+            <div style="font-weight:700;color:#fff8;">Your Hand <span id="player-total" style="font-weight:800;margin-left:8px;color:var(--main-gold)"></span></div>
+            <div class="hand" id="player-hand"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+          <div class="status liquid-glass" style="flex:1;text-align:center;">
+            <div class="txt" id="round-status">Place your bet to start</div>
+            <div style="font-size:0.85rem;color:#fff6;margin-top:6px;" id="sub-status"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <aside class="controls liquid-glass">
+        <div class="balance">
+          <div style="display:flex;justify-content:space-between;">
+            <div>
+              <div style="font-size:0.9rem;color:#fff8;font-weight:700;">Current User</div>
+              <div id="current-user" style="font-weight:900;font-size:1.05rem;color:var(--main-gold);margin-top:6px;">—</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.9rem;color:#fff8;font-weight:700;">Balance</div>
+              <div id="balance-amt" style="font-weight:900;font-size:1.05rem;margin-top:6px;">0 R$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bet-box">
+          <label for="bet-amount">Bet Amount (R$)</label>
+          <div class="bet-input" style="margin-top:8px;">
+            <input id="bet-amount" type="number" min="1" step="1" value="10" />
+            <button id="btn-place" class="btn gold">Place Bet</button>
+          </div>
+          <div style="margin-top:8px;font-size:0.85rem;color:#fff6;">Blackjack pays 3:2. Double on first move only.</div>
+        </div>
+
+        <div class="action-row">
+          <button id="btn-hit" class="btn green" disabled>Hit</button>
+          <button id="btn-stand" class="btn gold" disabled>Stand</button>
+          <button id="btn-double" class="btn warn" disabled>Double</button>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button id="btn-new" class="btn" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.06);">New Round</button>
+          <button id="btn-reset" class="btn" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.06);">Reset Balance</button>
+        </div>
+      </aside>
+    </main>
+
+    <div class="result-popup" id="result-popup"></div>
+
+    <button class="back-btn" onclick="window.location.href='main.html'">Go Back to Casino</button>
+  </div>
+
+  <script>
+    /*
+     * Blackjack with proper balance syncing.
+     * Uses cookies as authoritative source, sessionStorage as cache.
+     * Syncs with  main.html balance system.
+     */
+
+    // --- User Auth & Balance ---
+    // Cookie helpers (same as in main.html)
+    function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days*24*60*60*1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+    }
+    function getCookie(name) {
+        const cname = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1);
+            if (c.indexOf(cname) === 0) return decodeURIComponent(c.substring(cname.length, c.length));
+        }
+        return "";
+    }
+    function getCurrentUser() {
+        return localStorage.getItem('kazik_current_user');
+    }
+    function getAllUsers() {
+        return JSON.parse(localStorage.getItem('kazik_users') || '{}');
+    }
+    function setAllUsers(users) {
+        localStorage.setItem('kazik_users', JSON.stringify(users));
+    }
+    function getBalanceCache() {
+        let cache = sessionStorage.getItem('kazik_balances');
+        if (!cache) return {};
+        try {
+            return JSON.parse(cache);
+        } catch (e) {
+            return {};
+        }
+    }
+    function setBalanceCache(cache) {
+        sessionStorage.setItem('kazik_balances', JSON.stringify(cache));
+    }
+    function getUserBalance(username) {
+        const cookieVal = getCookie('kazik_rs_' + username);
+        if (cookieVal !== '') {
+            const n = parseInt(cookieVal, 10) || 0;
+            let cache = getBalanceCache();
+            cache[username] = n;
+            setBalanceCache(cache);
+            return n;
+        }
+        let cache = getBalanceCache();
+        return cache[username] || 0;
+    }
+    function setUserBalance(username, balance) {
+        let cache = getBalanceCache();
+        cache[username] = balance;
+        setBalanceCache(cache);
+        setCookie('kazik_rs_' + username, String(balance), 30);
+        syncBalanceEverywhere(username, balance);
+    }
+    function formatMoney(amount) {
+        return amount.toLocaleString('en-US') + ' <span class="rs-currency">R$</span>';
+    }
+    // Update the balance-amt element instead of rs-balance-bar
+    function updateBalanceBar() {
+        const user = getCurrentUser();
+        if (user) {
+            const el = document.getElementById('balance-amt');
+            if (el) {
+                el.innerHTML = formatMoney(getUserBalance(user));
+            }
+        }
+    }
+    function syncBalanceEverywhere(username, balance) {
+        updateBalanceBar();
+        // Notify opener (main.html) to refresh its bar
+        try {
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({ type: 'balance-updated', user: username, amount: balance }, window.location.origin);
+            }
+        } catch(e) {}
+        try {
+            localStorage.setItem('kazik_balance_sync', JSON.stringify({
+                user: username,
+                balance: balance,
+                ts: Date.now()
+            }));
+        } catch (e) {}
+    }
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'kazik_balance_sync' && e.newValue) {
+            try {
+                const data = JSON.parse(e.newValue);
+                const user = getCurrentUser();
+                if (data.user === user) {
+                    let cache = getBalanceCache();
+                    if (cache[user] !== data.balance) {
+                        cache[user] = data.balance;
+                        setBalanceCache(cache);
+                    }
+                    updateBalanceBar();
+                }
+            } catch (err) {}
+        }
+    });
+    // Respond to balance-updated broadcasts (e.g., from main)
+    window.addEventListener('message', function(event) {
+        if (event.origin !== window.location.origin) return;
+        if (!event.data || typeof event.data !== 'object') return;
+        if (event.data.type === 'balance-updated') {
+            const current = getCurrentUser();
+            if (event.data.user === current) updateBalanceBar();
+        }
+    });
+
+    // --- Blackjack logic ---
+    const SUITS=['♠','♥','♦','♣']; const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    const SUIT_CLASS={'♠':'black','♣':'black','♥':'red','♦':'red'};
+    const dealerHandEl=document.getElementById('dealer-hand');
+    const playerHandEl=document.getElementById('player-hand');
+    const dealerTotalEl=document.getElementById('dealer-total');
+    const playerTotalEl=document.getElementById('player-total');
+    const roundStatusEl=document.getElementById('round-status');
+    const subStatusEl=document.getElementById('sub-status');
+    const popupEl=document.getElementById('result-popup');
+
+    let deck=[],dealer=[],player=[],currentBet=0,roundActive=false;
+
+    // --- On Load: Check Auth, Sync Balance ---
+    window.addEventListener('DOMContentLoaded', function() {
+        const user = getCurrentUser();
+        if (!user) {
+            alert("You must be logged in to play!");
+            window.location.href = "main.html";
+            return;
+        }
+
+        // Repeatedly ensure our balance matches the authoritative cookie/ main.html
+        function startBalanceSyncLoop() {
+            const name = user;
+            let attempts = 0;
+            function tick() {
+                attempts++;
+                // Cookie is authoritative; read it and mirror into our cache/UI
+                const cookieVal = getCookie('kazik_rs_' + name);
+                const cookieBal = cookieVal === '' ? 0 : (parseInt(cookieVal, 10) || 0);
+                const localBal = getUserBalance(name);
+                if (localBal !== cookieBal) {
+                    setUserBalance(name, cookieBal);
+                }
+                updateBalanceBar();
+                // Keep syncing for a short window, then slow down
+                const delay = attempts < 10 ? 300 : 1500;
+                // Stop after ~10s of stability
+                if (attempts < 40) setTimeout(tick, delay);
+            }
+            tick();
+        }
+
+        startBalanceSyncLoop();
+        updateBalanceBar();
+    });
+
+    // --- Listen for  main.html's balance request and respond if this is  main.html ---
+    // (This code is harmless here, but only  main.html will actually respond)
+    window.addEventListener("message", function(event) {
+        if (event.origin !== window.location.origin) return;
+        if (!event.data || typeof event.data !== "object") return;
+        if (event.data.type === "main-balance-request" && typeof window.getUserBalance === "function") {
+            // Only  main.html should respond, but this is safe
+            const user = event.data.user;
+            const msgId = event.data.msgId;
+            let balance = 0;
+            try {
+                balance = window.getUserBalance(user);
+            } catch (e) {}
+            event.source.postMessage({
+                type: "main-balance-response",
+                user: user,
+                balance: balance,
+                msgId: msgId
+            }, event.origin);
+        }
+    });
+
+    function buildDeck(){const d=[];for(const s of SUITS){for(const r of RANKS){d.push({suit:s,rank:r,value:(r==='A')?[1,11]:r==='J'||r==='Q'||r==='K'?10:+r});}}return d;}
+    function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+    function cardScore(cards){let total=0,aces=0;for(const c of cards){if(c.rank==='A'){aces++;total+=1;}else total+=Array.isArray(c.value)?c.value[0]:c.value;}for(let i=0;i<aces;i++){if(total+10<=21)total+=10;}return total;}
+    function renderCard(c,up=true){const d=document.createElement('div');d.className='card'+(up?'':' back');if(!up)return d;d.innerHTML=`<div class="corner"><span class="${SUIT_CLASS[c.suit]}">${c.rank}</span><br><span class="${SUIT_CLASS[c.suit]}">${c.suit}</span></div><div class="center"><span class="${SUIT_CLASS[c.suit]}">${c.suit}</span></div><div class="corner" style="transform:rotate(180deg)"><span class="${SUIT_CLASS[c.suit]}">${c.rank}</span><br><span class="${SUIT_CLASS[c.suit]}">${c.suit}</span></div>`;return d;}
+    function showHands(hideDealerHole){dealerHandEl.innerHTML='';playerHandEl.innerHTML='';dealer.forEach((c,i)=>dealerHandEl.appendChild(renderCard(c,!(i===1&&hideDealerHole&&roundActive))));player.forEach(c=>playerHandEl.appendChild(renderCard(c,true)));playerTotalEl.textContent=cardScore(player);dealerTotalEl.textContent=hideDealerHole&&roundActive? (dealer[0].rank==='A'?11: Array.isArray(dealer[0].value)?dealer[0].value[0]:dealer[0].value): cardScore(dealer);}
+    function dealOne(to){if(deck.length===0)deck=shuffle(buildDeck());const c=deck.pop();to.push(c);}
+    function enableBtns(a){btnHit.disabled=!a;btnStand.disabled=!a;}
+    function endRound(){
+        roundActive=false;
+        enableBtns(false);
+        showHands(false);
+        const ps=cardScore(player),ds=cardScore(dealer);
+        const u=getCurrentUser();
+        let bal=getUserBalance(u),text='',pay=0;
+        if(ps>21)text=`Bust. You lost ${formatMoney(currentBet)}`;
+        else if(ds>21){text=`Dealer busts. You win ${formatMoney(currentBet)}!`;pay=currentBet*2;}
+        else if(ps>ds){text=`You win ${formatMoney(currentBet)}!`;pay=currentBet*2;}
+        else if(ps===ds){text=`Push. Bet returned.`;pay=currentBet;}
+        else text=`You lost ${formatMoney(currentBet)}`;
+        bal+=pay;
+        setUserBalance(u,bal);
+        updateBalanceBar();
+        popup(text);
+    }
+    function popup(t){popupEl.innerHTML=`<div style="font-weight:900;font-size:1.2rem;color:var(--main-gold);">Result</div><div style="margin-top:8px;">${t}</div><div style="margin-top:12px;"><button class='btn gold' onclick="popupEl.style.display='none'">OK</button></div>`;popupEl.style.display='';}
+
+    // --- Betting logic using balance-amt for display and sync ---
+    // Place bet button logic
+    const btnPlace = document.getElementById('btn-place');
+    const betInput = document.getElementById('bet-amount');
+    const btnHit = document.getElementById('btn-hit');
+    const btnStand = document.getElementById('btn-stand');
+    const btnDouble = document.getElementById('btn-double');
+    const btnNew = document.getElementById('btn-new');
+    const btnReset = document.getElementById('btn-reset');
+    const currentUserEl = document.getElementById('current-user');
+
+    // Show current user
+    (function(){
+      const user = getCurrentUser();
+      if (user && currentUserEl) currentUserEl.textContent = user;
+    })();
+
+    // Place bet event
+    btnPlace.addEventListener('click', function() {
+        if (roundActive) return;
+        const user = getCurrentUser();
+        let bal = getUserBalance(user);
+        let bet = parseInt(betInput.value, 10) || 0;
+        if (bet < 1) {
+            subStatusEl.textContent = "Bet must be at least 1 R$";
+            return;
+        }
+        if (bet > bal) {
+            subStatusEl.textContent = "Insufficient balance!";
+            return;
+        }
+        // Deduct bet and update balance-amt
+        bal -= bet;
+        setUserBalance(user, bal);
+        updateBalanceBar();
+        currentBet = bet;
+        subStatusEl.textContent = "";
+        startRound();
+    });
+
+    function startRound() {
+        deck = shuffle(buildDeck());
+        dealer = [];
+        player = [];
+        dealOne(player);
+        dealOne(dealer);
+        dealOne(player);
+        dealOne(dealer);
+        roundActive = true;
+        showHands(true);
+        btnHit.disabled = false;
+        btnStand.disabled = false;
+        btnDouble.disabled = false;
+        roundStatusEl.textContent = "Your move!";
+        subStatusEl.textContent = "";
+    }
+
+    btnHit.addEventListener('click', function() {
+        if (!roundActive) return;
+        dealOne(player);
+        showHands(true);
+        if (cardScore(player) > 21) {
+            endRound();
+        }
+    });
+
+    btnStand.addEventListener('click', function() {
+        if (!roundActive) return;
+        // Dealer plays
+        while (cardScore(dealer) < 17) dealOne(dealer);
+        endRound();
+    });
+
+    btnDouble.addEventListener('click', function() {
+        if (!roundActive) return;
+        const user = getCurrentUser();
+        let bal = getUserBalance(user);
+        if (bal < currentBet) {
+            subStatusEl.textContent = "Insufficient balance to double!";
+            return;
+        }
+        // Deduct additional bet
+        bal -= currentBet;
+        setUserBalance(user, bal);
+        updateBalanceBar();
+        currentBet *= 2;
+        dealOne(player);
+        showHands(true);
+        if (cardScore(player) > 21) {
+            endRound();
+        } else {
+            // Dealer plays
+            while (cardScore(dealer) < 17) dealOne(dealer);
+            endRound();
+        }
+    });
+
+    btnNew.addEventListener('click', function() {
+        roundActive = false;
+        dealer = [];
+        player = [];
+        currentBet = 0;
+        showHands(false);
+        roundStatusEl.textContent = "Place your bet to start";
+        subStatusEl.textContent = "";
+        btnHit.disabled = true;
+        btnStand.disabled = true;
+        btnDouble.disabled = true;
+    });
+
+    btnReset.addEventListener('click', function() {
+        const user = getCurrentUser();
+        setUserBalance(user, 1000);
+        updateBalanceBar();
+        subStatusEl.textContent = "Balance reset to 1,000 R$";
+    });
+
+    // On load, disable action buttons
+    btnHit.disabled = true;
+    btnStand.disabled = true;
+    btnDouble.disabled = true;

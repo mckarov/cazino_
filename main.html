@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nick&Goshan Casino</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-container {
+            max-width: 340px;
+            margin: 48px auto 0 auto;
+            background: rgba(34,49,63,0.85);
+            padding: 32px 24px 24px 24px;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(20, 90, 50, 0.18);
+            text-align: center;
+        }
+        .auth-container h2 {
+            margin-bottom: 18px;
+        }
+        .auth-container input {
+            width: 90%;
+            padding: 8px 10px;
+            margin: 8px 0 16px 0;
+            border-radius: 6px;
+            border: none;
+            font-size: 1rem;
+        }
+        .auth-container button {
+            padding: 8px 24px;
+            border-radius: 6px;
+            border: none;
+            background: #229954;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0 6px;
+            transition: background 0.2s;
+        }
+        .auth-container button:hover {
+            background: #145a32;
+        }
+        .auth-toggle {
+            margin-top: 10px;
+            color: #eee;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.95em;
+        }
+        .error-message {
+            color: #ffb3b3;
+            margin-bottom: 10px;
+            min-height: 18px;
+        }
+        .casino-main, .casino-footer {
+            display: none;
+        }
+        .casino-main.active, .casino-footer.active {
+            display: block;
+        }
+        .plaque-rs {
+            position: fixed;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(34, 153, 84, 0.97);
+            color: #fff;
+            padding: 22px 44px;
+            border-radius: 16px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            box-shadow: 0 6px 32px rgba(20, 90, 50, 0.22);
+            z-index: 9999;
+            display: none;
+            letter-spacing: 1px;
+            border: 2px solid #fff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            animation: fadein 0.5s;
+        }
+        @keyframes fadein {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px);}
+            to { opacity: 1; transform: translateX(-50%) translateY(0);}
+        }
+        .rs-balance-bar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            background: rgba(34,49,63,0.92);
+            color: #fff;
+            padding: 10px 28px 10px 18px;
+            border-radius: 0 0 0 18px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 2px 12px rgba(20, 90, 50, 0.10);
+            display: none;
+            letter-spacing: 1px;
+        }
+        .rs-currency {
+            font-weight: bold;
+            color: #ffe066;
+            margin-left: 2px;
+        }
+        .admin-console {
+            position: fixed;
+            left: 12px;
+            bottom: 12px;
+            width: 320px;
+            background: rgba(20, 24, 30, 0.92);
+            color: #e5e5e5;
+            border-radius: 10px;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.35);
+            border: 1px solid #ffffff33;
+            padding: 10px 10px 8px 10px;
+            z-index: 1200;
+            display: none;
+        }
+        .admin-console-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #ffe066;
+            margin-bottom: 6px;
+        }
+        .admin-console-log {
+            height: 110px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+        }
+        .admin-console-input {
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            outline: none;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <header class="casino-header">
+        <h1>Kazik Casino</h1>
+        <p class="casino-tagline">Experience the thrill of classic casino games!</p>
+    </header>
+    <div id="auth-section" class="auth-container">
+        <h2 id="auth-title">Sign Up</h2>
+        <div class="error-message" id="auth-error"></div>
+        <form id="signup-form" autocomplete="off">
+            <input type="text" id="signup-name" placeholder="Name" required><br>
+            <input type="password" id="signup-password" placeholder="Password" required><br>
+            <button type="submit">Sign Up</button>
+        </form>
+        <form id="login-form" style="display:none;" autocomplete="off">
+            <input type="text" id="login-name" placeholder="Name" required><br>
+            <input type="password" id="login-password" placeholder="Password" required><br>
+            <button type="submit">Log In</button>
+        </form>
+        <div class="auth-toggle" id="toggle-auth">Already have an account? Log In</div>
+    </div>
+    <div id="rs-plaque" class="plaque-rs"></div>
+    <div id="rs-balance-bar" class="rs-balance-bar"></div>
+    <div id="admin-console" class="admin-console">
+        <div class="admin-console-title">Admin Console</div>
+        <div id="admin-console-log" class="admin-console-log"></div>
+        <input id="admin-console-input" class="admin-console-input" placeholder="add <amount>" autocomplete="off">
+    </div>
+    <main class="casino-main" id="main-content">
+        <section class="games-selection">
+            <h2>Choose Your Game</h2>
+            <div class="games-list">
+                <a href="roulette.html" class="game-card roulette">
+                    <img src="https://images.squarespace-cdn.com/content/v1/5b91c5dca2772cf6ca58533e/31390a5c-c667-46d9-b409-4109c62e0ecd/signal-2023-05-01-153707_003.jpg" alt="Roulette">
+                </a>
+                <a href="blackjack.html" class="game-card blackjack">
+                    <img src="https://lh3.googleusercontent.com/proxy/dFGEfwAwTY2LgVyHxmx31ORROzggIWtRL0BdJk06jnJ6p71HdimmdBef_kTXHCPveGyP3wl7Dzsrh3qcmBUp5XZTO0fOue7BYItgVgGUiMPTW4G7kw" alt="Blackjack">
+                </a>
+                <a href="spin.html" class="game-card spin">
+                    <img src="https://media.istockphoto.com/id/2130791181/vector/fortune-wheel-at-backlight-realistic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZGK3mKUZZUti0eZSTNnfBSXJTrCp024o_DxJcI98jss=" alt="Spin the Wheel">
+                </a>
+            </div>
+        </section>
+    </main>
+    <footer class="casino-footer" id="main-footer">
+        &copy; 2024 Kazik Casino. All rights reserved.
+    </footer>
+    <script>
+
+        const signupForm = document.getElementById('signup-form');
+        const loginForm = document.getElementById('login-form');
+        const toggleAuth = document.getElementById('toggle-auth');
+        const authTitle = document.getElementById('auth-title');
+        const authError = document.getElementById('auth-error');
+        const authSection = document.getElementById('auth-section');
+        const mainContent = document.getElementById('main-content');
+        const mainFooter = document.getElementById('main-footer');
+        const rsPlaque = document.getElementById('rs-plaque');
+        const rsBalanceBar = document.getElementById('rs-balance-bar');
+
+        //format R$
+        function formatRS(amount) {
+            return amount.toLocaleString('en-US') + ' <span class="rs-currency">R$</span>';
+        }
+
+        // --- localStorage balance helpers ---
+        function getUserBalance(name) {
+            return parseInt(localStorage.getItem('kazik_rs_' + name) || '0', 10);
+        }
+        function setUserBalance(name, amount) {
+            // authoritative: localStorage
+            localStorage.setItem('kazik_rs_' + name, String(amount));
+            // broadcast via a simple sync payload that listeners watch
+            try {
+                localStorage.setItem('kazik_balance_sync', JSON.stringify({
+                    user: name,
+                    balance: amount,
+                    ts: Date.now()
+                }));
+            } catch (e) {}
+            // update UI
+            showBalanceBar(name);
+        }
+
+        function showPlaque(message) {
+            rsPlaque.innerHTML = message;
+            rsPlaque.style.display = 'block';
+            setTimeout(() => {
+                rsPlaque.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show the R$ balance bar
+        function showBalanceBar(name) {
+            const balance = getUserBalance(name);
+            rsBalanceBar.innerHTML = `Balance: ${formatRS(balance)}`;
+            rsBalanceBar.style.display = 'block';
+        }
+
+        // Hide the R$ balance bar
+        function hideBalanceBar() {
+            rsBalanceBar.style.display = 'none';
+        }
+
+        // Get last login timestamp
+        function getLastLoginTimestamp(name) {
+            return parseInt(localStorage.getItem('kazik_lastlogin_ts_' + name) || '0', 10);
+        }
+
+        // Set last login timestamp for user
+        function setLastLoginTimestamp(name, ts) {
+            localStorage.setItem('kazik_lastlogin_ts_' + name, String(ts));
+        }
+
+        // Get last login date
+        function getLastLoginDate(name) {
+            return localStorage.getItem('kazik_lastlogin_' + name) || '';
+        }
+
+        // Set last login date
+        function setLastLoginDate(name, dateStr) {
+            localStorage.setItem('kazik_lastlogin_' + name, dateStr);
+        }
+
+        // fetch date
+        function getTodayDateStr() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+
+        function showMain(name) {
+            authSection.style.display = 'none';
+            mainContent.classList.add('active');
+            mainFooter.classList.add('active');
+            showBalanceBar(name);
+            if (name === 'admin') showAdminConsole(); else hideAdminConsole();
+        }
+
+        function showAuth() {
+            authSection.style.display = 'block';
+            mainContent.classList.remove('active');
+            mainFooter.classList.remove('active');
+            hideBalanceBar();
+            hideAdminConsole();
+        }
+
+        //BALANCE SYNC BETWEEN MAIN AND GAMES
+        (function() {
+            function getCurrentUser() {
+                return localStorage.getItem('kazik_current_user');
+            }
+            function get() {
+                const name = getCurrentUser();
+                if (!name) return 0;
+                return getUserBalance(name);
+            }
+            function set(amount) {
+                const name = getCurrentUser();
+                if (!name) return;
+                setUserBalance(name, amount);
+            }
+            function add(delta) {
+                set(get() + delta);
+            }
+            window.kazikBalance = { get, set, add };
+        })();
+
+        // Listen for balance, sync events from other tabs/games
+        window.addEventListener('message', function(event) {
+            if (event.origin !== window.location.origin) return;
+            if (!event.data || typeof event.data !== 'object') return;
+            if (event.data.type === 'balance-updated') {
+                const current = localStorage.getItem('kazik_current_user');
+                if (event.data.user === current) showBalanceBar(current);
+            }
+        });
+
+        const get_current_user = () => localStorage.getItem('kazik_current_user');
+        const get_user_balance = getUserBalance;
+        const set_user_balance = setUserBalance;
+        const show_balance_bar = showBalanceBar;
+
+        const adminConsole = document.getElementById('admin-console');
+        const adminLog = document.getElementById('admin-console-log');
+        const adminInput = document.getElementById('admin-console-input');
+
+        function showAdminConsole() {
+            adminConsole.style.display = 'block';
+            appendLog('Type "add <amount>" to credit balance.');
+            setTimeout(() => adminInput.focus(), 0);
+        }
+        function hideAdminConsole() {
+            adminConsole.style.display = 'none';
+            adminLog.innerHTML = '';
+            adminInput.value = '';
+        }
+        function appendLog(msg) {
+            const div = document.createElement('div');
+            div.textContent = msg;
+            adminLog.appendChild(div);
+            adminLog.scrollTop = adminLog.scrollHeight;
+        }
+        adminInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = adminInput.value.trim();
+                if (!cmd) return;
+                appendLog('> ' + cmd);
+                const match = cmd.match(/^add\s+(-?\d+)$/i);
+                if (!match) {
+                    appendLog('Invalid command. Usage: add <amount>');
+                } else {
+                    const amount = parseInt(match[1], 10);
+                    const user = localStorage.getItem('kazik_current_user');
+                    if (user !== 'admin') {
+                        appendLog('Access denied.');
+                    } else {
+                        const currentBal = getUserBalance(user);
+                        const newBal = currentBal + amount;
+                        setUserBalance(user, newBal);
+                        showBalanceBar(user);
+                        try { window.postMessage({ type: 'balance-updated', user, amount: newBal }, window.location.origin); } catch(e) {}
+                        appendLog('Balance updated: +' + amount + ' R$. New balance: ' + newBal);
+                    }
+                }
+                adminInput.value = '';
+            }
+        });
+
+        //require login on page reload
+        localStorage.removeItem('kazik_logged_in');
+        localStorage.removeItem('kazik_current_user');
+        showAuth();
+
+        //registration
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value.trim();
+            const password = document.getElementById('signup-password').value;
+            if (!name || !password) {
+                authError.textContent = "Please enter both name and password.";
+                return;
+            }
+            if (localStorage.getItem('kazik_user_' + name)) {
+                authError.textContent = "User already exists. Please log in.";
+                return;
+            }
+            // Save user (insecure, for demo only)
+            localStorage.setItem('kazik_user_' + name, password);
+            localStorage.setItem('kazik_logged_in', 'true');
+            localStorage.setItem('kazik_current_user', name);
+
+            // reg award
+            setUserBalance(name, 100000);
+            //set 1st timestamp
+            const today = getTodayDateStr();
+            setLastLoginDate(name, today);
+            setLastLoginTimestamp(name, Date.now());
+
+            authError.textContent = "";
+            showMain(name);
+            showPlaque('Welcome! You have received <span style="color:#ffe066;">100,000 R$</span> for registering.');
+        });
+
+        // Login
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('login-name').value.trim();
+            const password = document.getElementById('login-password').value;
+            const stored = localStorage.getItem('kazik_user_' + name);
+            if (!stored) {
+                authError.textContent = "User not found. Please sign up.";
+                return;
+            }
+            if (stored !== password) {
+                authError.textContent = "Incorrect password.";
+                return;
+            }
+            localStorage.setItem('kazik_logged_in', 'true');
+            localStorage.setItem('kazik_current_user', name);
+
+            //check last login timestamp for 8 hour bonus
+            const now = Date.now();
+            const lastLoginTs = getLastLoginTimestamp(name);
+            let reward = 0;
+            if (!lastLoginTs || (now - lastLoginTs) > 8 * 60 * 60 * 1000) {
+                //add 8hour bonus
+                let bal = getUserBalance(name);
+                bal += 10000;
+                setUserBalance(name, bal);
+                reward = 10000;
+            }
+            //update last login timestamp
+            setLastLoginTimestamp(name, now);
+
+            authError.textContent = "";
+            showMain(name);
+            if (reward > 0) {
+                showPlaque('8 hour login bonus! You have received <span style="color:#ffe066;">10,000 R$</span>.');
+            }
+        });
+
+        let signupMode = true;
+        toggleAuth.addEventListener('click', function() {
+            signupMode = !signupMode;
+            if (signupMode) {
+                signupForm.style.display = '';
+                loginForm.style.display = 'none';
+                authTitle.textContent = "Sign Up";
+                toggleAuth.textContent = "Already have an account? Log In";
+                authError.textContent = "";
+            } else {
+                signupForm.style.display = 'none';
+                loginForm.style.display = '';
+                authTitle.textContent = "Log In";
+                toggleAuth.textContent = "Don't have an account? Sign Up";
+                authError.textContent = "";
+            }
+        });
+
+        //always require login
+        document.addEventListener('DOMContentLoaded', function() {
+            //login required every time
+        });
+
+        //react to balance sync events from other tabs/games
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'kazik_balance_sync' && e.newValue) {
+                try {
+                    const data = JSON.parse(e.newValue);
+                    const current = localStorage.getItem('kazik_current_user');
+                    if (data.user === current) {
+                        showBalanceBar(current);
+                    }
+                } catch (err) {}
+            }
+        });
+    </script>
+</body>
+</html>

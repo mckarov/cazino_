@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>American Roulette</title>
+    <meta name="viewport" content="width=1024, initial-scale=1">
+    <style>
+        :root {
+            --glass-bg: rgba(34, 49, 63, 0.32);
+            --glass-border: rgba(255,255,255,0.18);
+            --glass-blur: 18px;
+            --main-green: #229954;
+            --main-red: #e74c3c;
+            --main-black: #222;
+            --main-gold: #ffe066;
+            --main-white: #fff;
+            --main-shadow: 0 8px 48px 0 rgba(20, 90, 50, 0.22);
+            --table-bg: rgba(34,49,63,0.18);
+            --table-border: #fff8;
+            --chip-shadow: 0 2px 8px #0005;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e2a38 0%, #2e4a3d 100%);
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .liquid-glass {
+            background: var(--glass-bg);
+            border: 2.5px solid var(--glass-border);
+            border-radius: 32px;
+            box-shadow: var(--main-shadow), 0 1.5px 0 0 var(--main-gold) inset;
+            backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+        }
+        .roulette-header {
+            margin-top: 24px;
+            margin-bottom: 10px;
+            transform: translateX(50px);
+            font-size: 3rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 3px;
+            text-shadow: 0 3px 16px rgba(0,0,0,0.4), 0 0 22px rgba(255,224,102,0.25);
+            text-align: center;
+            background: linear-gradient(180deg, #ffffff 0%, #ffe066 60%, #d9b94a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .roulette-main-flex {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 48px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .roulette-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+        .roulette-wheel-glass {
+            padding: 32px 32px 24px 32px;
+            margin-top: 12px;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .roulette-wheel-outer {
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 60% 40%, #e6cfa1 60%, #bfa76a 100%);
+            box-shadow: 0 8px 32px #0004, 0 0 0 8px #ffe06633 inset;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .roulette-wheel-inner {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 60% 40%, #229954 70%, #145a32 100%);
+            border: 10px solid rgba(255,255,255,0.85);
+            box-shadow: 0 2px 18px #0004;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .roulette-pointer {
+            position: absolute;
+            top: -10px;
+            transform: translateX();
+            width: 0; 
+            height: 0; 
+            border-left: 22px solid transparent;
+            border-right: 22px solid transparent;
+            border-bottom: 38px solid var(--main-gold);
+            border-bottom: 38px solid #ffe066;
+            filter: drop-shadow(0 2px 4px #0006);
+            z-index: 2;
+            transform: scaleY(-1);
+        }
+        .roulette-svg {
+            width: 96%;
+            height: 96%;
+            display: block;
+        }
+        .roulette-wheel {
+            width: 520px;
+            height: 520px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 60% 40%, #e6cfa122 60%, #bfa76a11 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .rs-balance-bar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            background: rgba(34,49,63,0.92);
+            color: #fff;
+            padding: 10px 28px 10px 18px;
+            border-radius: 0 0 0 18px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 2px 12px rgba(20, 90, 50, 0.10);
+            letter-spacing: 1px;
+        }
+        .roulette-flex { display: flex; flex-direction: row; gap: 28px; align-items: flex-start; justify-content: center; }
+        .roulette-table-area {
+            order: 0;
+            flex: 0 0 520px;
+            min-width: 480px;
+            max-width: 560px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            width: 520px;
+        }
+        .roulette-table {
+            background: rgba(34,49,63,0.92);
+            border-radius: 18px;
+            box-shadow: 0 2px 18px #0004;
+            padding: 18px 10px 10px 10px;
+            margin-bottom: 18px;
+            border: 1.5px solid #ffe06644;
+            position: relative;
+            overflow-x: auto;
+            width: 100%;
+        }
+        .roulette-table-inner {
+            border-collapse: collapse;
+            margin: 0 auto 18px auto;
+            width: 92%;
+            max-width: 100%;
+            table-layout: fixed;
+        }
+        .roulette-table-inner td, .roulette-table-inner th {
+            width: 30px;
+            min-width: 30px;
+            height: 30px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1.5px solid #fff2;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            user-select: none;
+            transition: box-shadow 0.2s, background 0.2s;
+            line-height: 30px;
+            padding: 0;
+        }
+        .felt {
+            width: 92%;
+            margin: 0 auto 6px auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .felt .dozen {
+            background: #2d5f46;
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 8px;
+            text-align: center;
+            padding: 10px 0;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .felt .dozen:hover { filter: brightness(1.08); }
+        .felt .dozen:active { transform: translateY(1px); }
+        .felt .dozen.selected { box-shadow: 0 0 0 3px #ffe066 inset; }
+        .felt-row2 {
+            width: 92%;
+            margin: 6px auto 12px auto;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+        .felt-cell {
+            background: #2d5f46;
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 8px;
+            text-align: center;
+            padding: 10px 0;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .felt-cell:hover { filter: brightness(1.08); }
+        .felt-cell:active { transform: translateY(1px); }
+        .felt-cell.selected { box-shadow: 0 0 0 3px #ffe066 inset; }
+        .felt-cell.red { background: #2d5f46; position: relative; }
+        .felt-cell.black { background: #2d5f46; position: relative; }
+        .diamond {
+            width: 0; height: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(45deg);
+            border: 14px solid transparent;
+        }
+        .diamond.red { border-bottom-color: #e74c3c; border-top-color: #e74c3c; border-left-color: #e74c3c; border-right-color: #e74c3c; }
+        .diamond.black { border-bottom-color: #111; border-top-color: #111; border-left-color: #111; border-right-color: #111; }
+        .roulette-table-inner .red { background: #e74c3c; color: #fff; }
+        .roulette-table-inner .black { background: #222; color: #fff; }
+        .roulette-table-inner .green { background: #229954; color: #fff; }
+        .roulette-table-inner .selected { box-shadow: 0 0 0 4px #ffe066; }
+        .roulette-table-inner .bet-multi {
+            outline: 3px solid #ffe066;
+            outline-offset: -2px;
+        }
+        .betting-section {
+            margin: 18px 0 0 0;
+        }
+        .betting-section label {
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        .betting-section input[type="number"] {
+            width: 80px;
+            padding: 6px;
+            border-radius: 6px;
+            border: none;
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+        .betting-section select {
+            padding: 6px;
+            border-radius: 6px;
+            border: none;
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+        #bet-type { display: none; }
+        .betting-section button {
+            padding: 8px 24px;
+            border-radius: 6px;
+            border: none;
+            background: #229954;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0 6px;
+            transition: background 0.2s;
+        }
+        .betting-section button:hover {
+            background: #145a32;
+        }
+        .result-message {
+            margin-top: 18px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 32px;
+        }
+        .win-plaque {
+            position: fixed;
+            left: 50%;
+            top: 18%;
+            transform: translateX(-50%);
+            max-width: 640px;
+            width: calc(100% - 40px);
+            background: rgba(34,49,63,0.96);
+            color: #ffe066;
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 16px;
+            padding: 18px 18px 14px 18px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.45);
+            z-index: 1500;
+            display: none;
+            text-align: center;
+        }
+        .lose-plaque {
+            position: fixed;
+            left: 50%;
+            top: 18%;
+            transform: translateX(-50%);
+            max-width: 640px;
+            width: calc(100% - 40px);
+            background: rgba(34,49,63,0.96);
+            color: #ffb3b3;
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 16px;
+            padding: 18px 18px 14px 18px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.45);
+            z-index: 1500;
+            display: none;
+            text-align: center;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 18px;
+            color: #1b2a20;
+            background: linear-gradient(180deg, #ffe066 0%, #f7cc35 100%);
+            border: 1px solid rgba(255,255,255,0.6);
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            transition: transform .08s ease, filter .15s ease;
+        }
+        .back-link:hover { filter: brightness(1.05); }
+        .back-link:active { transform: translateY(1px); }
+        .multi-bet-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .multi-bet-checkbox {
+            display: flex;
+            align-items: center;
+            background: #222c;
+            border-radius: 8px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #ffe066;
+            border: 1.5px solid #ffe06644;
+            user-select: none;
+            transition: background 0.15s;
+        }
+        .multi-bet-checkbox input[type="checkbox"] {
+            margin-right: 6px;
+            accent-color: #ffe066;
+        }
+        .multi-bet-checkbox.selected {
+            background: #ffe066;
+            color: #222;
+            font-weight: bold;
+        }
+        @media (max-width: 900px) {
+            .roulette-flex { flex-direction: column; align-items: center; }
+            .roulette-table-area {
+                align-items: center;
+                width: 100%;
+            }
+            .roulette-table {
+                width: 100%;
+            }
+            .roulette-table-inner {
+                width: 100%;
+            }
+        }
+        @media (max-width: 600px) {
+            .roulette-wheel { width: 220px; height: 220px; }
+            .roulette-table-inner td, .roulette-table-inner th { width: 28px; height: 28px; font-size: 0.95rem; }
+            .roulette-container { padding: 16px 4px 16px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="roulette-container">
+        <div id="rs-balance-bar" class="rs-balance-bar">Balance: 0 <span class="rs-currency">R$</span></div>
+        <div class="roulette-title roulette-header">American Roulette</div>
+        <div class="roulette-flex">
+            <div class="roulette-wheel-area">
+                <div class="roulette-wheel">
+                    <div class="roulette-pointer"></div>
+                    <!-- SVG Roulette Wheel -->
+                    <svg class="roulette-svg" viewBox="0 0 420 420">
+                        <g id="wheel-numbers"></g>
+                        <circle cx="210" cy="210" r="190" fill="none" stroke="#ffe066" stroke-width="4"/>
+                        <circle cx="210" cy="210" r="165" fill="#222" opacity="0.12"/>
+                        <circle cx="210" cy="210" r="34" fill="#ffe066" stroke="#fff" stroke-width="2"/>
+                        <circle id="ball" cx="210" cy="46" r="10" fill="#fff" stroke="#222" stroke-width="2" style="display:none"/>
+                    </svg>
+                </div>
+                
+            </div>
+            <div class="roulette-table-area">
+                <div id="win-plaque" class="win-plaque"></div>
+                <div id="lose-plaque" class="lose-plaque"></div>
+                <form id="bet-form" autocomplete="off">
+                    <div class="betting-section">
+                        <select id="bet-type" required>
+                            <option value="straight">Straight (Single Number)</option>
+                            <option value="multi">Multiple Bets (Select Below)</option>
+                            <option value="color">Color (Red/Black)</option>
+                            <option value="evenodd">Even/Odd</option>
+                            <option value="lowhigh">Low (1-18) / High (19-36)</option>
+                            <option value="dozen">Dozen (1-12, 13-24, 25-36)</option>
+                            <option value="column">Column (1st, 2nd, 3rd)</option>
+                        </select>
+                    </div>
+                    <div class="betting-section" id="bet-options">
+                        <!-- Dynamic options -->
+                    </div>
+                    <div class="betting-section">
+                        <label for="bet-amount">Amount (R$):</label>
+                        <input type="number" id="bet-amount" min="1" step="1" required>
+                        <button type="submit">Place Bet & Spin</button>
+                    </div>
+                </form>
+                <div class="roulette-table">
+                    <table class="roulette-table-inner" id="roulette-table-inner">
+                        <!-- Table generated by JS -->
+                    </table>
+                    <div class="felt" id="felt-dozens">
+                        <div class="dozen" data-type="dozen" data-value="1">1st 12</div>
+                        <div class="dozen" data-type="dozen" data-value="2">2nd 12</div>
+                        <div class="dozen" data-type="dozen" data-value="3">3rd 12</div>
+                    </div>
+                    <div class="felt-row2" id="felt-row2">
+                        <div class="felt-cell" data-type="lowhigh" data-value="low">1 to 18</div>
+                        <div class="felt-cell" data-type="evenodd" data-value="even">EVEN</div>
+                        <div class="felt-cell red" data-type="color" data-value="red"><span class="diamond red"></span></div>
+                        <div class="felt-cell black" data-type="color" data-value="black"><span class="diamond black"></span></div>
+                        <div class="felt-cell" data-type="evenodd" data-value="odd">ODD</div>
+                        <div class="felt-cell" data-type="lowhigh" data-value="high">19 to 36</div>
+                    </div>
+                </div>
+                <div class="result-message" id="result-message"></div>
+                <div class="back-link" onclick="window.location.href='main.html'">&larr; Back to Casino</div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        // Numbers on the wheel in order with their colors
+        const numbersList = [
+            { number: '0', color: 'green' }, { number: 28, color: 'black' },
+            { number: 9, color: 'red' },  { number: 26, color: 'black' },
+            { number: 30, color: 'red' },  { number: 11, color: 'black' },
+            { number: 7, color: 'red' },   { number: 20, color: 'black' },
+            { number: 32, color: 'red' },  { number: 17, color: 'black' },
+            { number: 5, color: 'red' },   { number: 22, color: 'black' },
+            { number: 34, color: 'red' },  { number: 15, color: 'black' },
+            { number: 3, color: 'red' },   { number: 24, color: 'black' },
+            { number: 36, color: 'red' },  { number: 13, color: 'black' },
+            { number: 1, color: 'red' },   { number: '00', color: 'green' },
+            { number: 27, color: 'red' },  { number: 10, color: 'black' },
+            { number: 25, color: 'red' },  { number: 29, color: 'black' },
+            { number: 12, color: 'red' },  { number: 8, color: 'black' },
+            { number: 19, color: 'red' },  { number: 31, color: 'black' },
+            { number: 18, color: 'red' },  { number: 6, color: 'black' },
+            { number: 21, color: 'red' },  { number: 33, color: 'black' },
+            { number: 16, color: 'red' },  { number: 4, color: 'black' },
+            { number: 23, color: 'red' },  { number: 35, color: 'black' },
+            { number: 14, color: 'red' },  { number: 2, color: 'black' }
+        ];
+
+        // --- User Auth & Balance ---
+        // Cookie helpers (same as in main.html)
+        function setCookie(name, value, days) {
+            const d = new Date();
+            d.setTime(d.getTime() + (days*24*60*60*1000));
+            const expires = "expires=" + d.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+        }
+        function getCookie(name) {
+            const cname = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1);
+                if (c.indexOf(cname) === 0) return decodeURIComponent(c.substring(cname.length, c.length));
+            }
+            return "";
+        }
+        function getCurrentUser() {
+            return localStorage.getItem('kazik_current_user');
+        }
+        function getAllUsers() {
+            return JSON.parse(localStorage.getItem('kazik_users') || '{}');
+        }
+        function setAllUsers(users) {
+            localStorage.setItem('kazik_users', JSON.stringify(users));
+        }
+        function getBalanceCache() {
+            let cache = sessionStorage.getItem('kazik_balances');
+            if (!cache) return {};
+            try {
+                return JSON.parse(cache);
+            } catch (e) {
+                return {};
+            }
+        }
+        function setBalanceCache(cache) {
+            sessionStorage.setItem('kazik_balances', JSON.stringify(cache));
+        }
+        function getUserBalance(username) {
+            const cookieVal = getCookie('kazik_rs_' + username);
+            if (cookieVal !== '') {
+                const n = parseInt(cookieVal, 10) || 0;
+                let cache = getBalanceCache();
+                cache[username] = n;
+                setBalanceCache(cache);
+                return n;
+            }
+            let cache = getBalanceCache();
+            return cache[username] || 0;
+        }
+        function setUserBalance(username, balance) {
+            let cache = getBalanceCache();
+            cache[username] = balance;
+            setBalanceCache(cache);
+            setCookie('kazik_rs_' + username, String(balance), 30);
+            syncBalanceEverywhere(username, balance);
+        }
+        function formatMoney(amount) {
+            return amount.toLocaleString('en-US') + ' <span class="rs-currency">R$</span>';
+        }
+        function updateBalanceBar() {
+            const user = getCurrentUser();
+            if (user) {
+                const el = document.getElementById('rs-balance-bar');
+                el.innerHTML = "Balance: " + formatMoney(getUserBalance(user));
+            }
+        }
+        function syncBalanceEverywhere(username, balance) {
+            updateBalanceBar();
+            // Notify opener (main.html) to refresh its bar
+            try {
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({ type: 'balance-updated', user: username, amount: balance }, window.location.origin);
+                }
+            } catch(e) {}
+            try {
+                localStorage.setItem('kazik_balance_sync', JSON.stringify({
+                    user: username,
+                    balance: balance,
+                    ts: Date.now()
+                }));
+            } catch (e) {}
+        }
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'kazik_balance_sync' && e.newValue) {
+                try {
+                    const data = JSON.parse(e.newValue);
+                    const user = getCurrentUser();
+                    if (data.user === user) {
+                        let cache = getBalanceCache();
+                        if (cache[user] !== data.balance) {
+                            cache[user] = data.balance;
+                            setBalanceCache(cache);
+                        }
+                        updateBalanceBar();
+                    }
+                } catch (err) {}
+            }
+        });
+        // Respond to balance-updated broadcasts (e.g., from main)
+        window.addEventListener('message', function(event) {
+            if (event.origin !== window.location.origin) return;
+            if (!event.data || typeof event.data !== 'object') return;
+            if (event.data.type === 'balance-updated') {
+                const current = getCurrentUser();
+                if (event.data.user === current) updateBalanceBar();
+            }
+        });
+
+        //Bet Options UI
+        const betOptionsBox = document.getElementById('bet-options');
+        const betTypeBox = document.getElementById('bet-type');
+        const betTypeSelect = betTypeBox;
+        const betOptionsDiv = betOptionsBox;
+        const rouletteNumbers = numbersList.map(n => ({ value: n.number, color: n.color }));
+        const multiBetsList = [
+            { id: "multi-1st12", label: "1st 12", type: "dozen", value: "1" },
+            { id: "multi-2nd12", label: "2nd 12", type: "dozen", value: "2" },
+            { id: "multi-3rd12", label: "3rd 12", type: "dozen", value: "3" },
+            { id: "multi-1to18", label: "1 to 18", type: "lowhigh", value: "low" },
+            { id: "multi-even", label: "even", type: "evenodd", value: "even" },
+            { id: "multi-odd", label: "odd", type: "evenodd", value: "odd" },
+            { id: "multi-black", label: "black", type: "color", value: "black" },
+            { id: "multi-red", label: "red", type: "color", value: "red" },
+            { id: "multi-19to36", label: "19 to 36", type: "lowhigh", value: "high" }
+        ];
+        function showBetOptions() {
+            const type = betTypeBox.value;
+            betOptionsBox.innerHTML = '';
+            if (type === 'straight') {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.id = 'bet-straight-value';
+                input.required = true;
+                betOptionsBox.appendChild(input);
+            } else if (type === 'multi') {
+                const multiDiv = document.createElement('div');
+                multiDiv.className = 'multi-bet-options';
+                multiBetsList.forEach(opt => {
+                    const label = document.createElement('label');
+                    label.className = 'multi-bet-checkbox';
+                    label.setAttribute('for', opt.id);
+                    label.innerHTML = `<input type="checkbox" id="${opt.id}" data-type="${opt.type}" data-value="${opt.value}"> ${opt.label}`;
+                    multiDiv.appendChild(label);
+                });
+                betOptionsBox.appendChild(multiDiv);
+            } else if (type === 'color' || type === 'evenodd' || type === 'lowhigh' || type === 'dozen' || type === 'column') {
+                let input = document.getElementById('bet-selected-value');
+                if (!input) {
+                    input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.id = 'bet-selected-value';
+                    input.required = true;
+                    betOptionsBox.appendChild(input);
+                } else {
+                    betOptionsBox.appendChild(input);
+                }
+            }
+        }
+        betTypeBox.addEventListener('change', showBetOptions);
+        showBetOptions();
+
+        //bet-type selectors
+        function clearFeltSelection() {
+            document.querySelectorAll('.felt .dozen, .felt-row2 .felt-cell').forEach(el => el.classList.remove('selected'));
+        }
+        function handleFeltClick(e) {
+            const target = e.target.closest('[data-type]');
+            if (!target) return;
+            clearFeltSelection();
+            target.classList.add('selected');
+            const type = target.getAttribute('data-type');
+            const value = target.getAttribute('data-value');
+            betTypeBox.value = type;
+            showBetOptions();
+            let hidden = document.getElementById('bet-selected-value');
+            if (!hidden) {
+                hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.id = 'bet-selected-value';
+                document.getElementById('bet-options').appendChild(hidden);
+            }
+            hidden.value = value || '';
+        }
+        document.getElementById('felt-dozens').addEventListener('click', handleFeltClick);
+        document.getElementById('felt-row2').addEventListener('click', handleFeltClick);
+
+        /* --- Underscore Aliases (nomenclature preference) --- */
+        const get_current_user = getCurrentUser;
+        const get_user_balance = getUserBalance;
+        const set_user_balance = setUserBalance;
+        const update_balance_bar = updateBalanceBar;
+        const draw_wheel_svg = drawWheelSVG;
+        const draw_table = drawTable;
+        const animate_ball = animateBall;
+
+        // Draw SVG Wheel
+        function drawWheelSVG() {
+            const g = document.getElementById('wheel-numbers');
+            if (!g) return;
+            g.innerHTML = '';
+            const n = numbersList.length;
+            const centerX = 210, centerY = 210, rOuter = 190, rInner = 135;
+            for (let i = 0; i < n; ++i) {
+                const angle = (2 * Math.PI * i) / n - Math.PI/2;
+                const angleNext = (2 * Math.PI * (i+1)) / n - Math.PI/2;
+                const x1 = centerX + rOuter * Math.cos(angle);
+                const y1 = centerY + rOuter * Math.sin(angle);
+                const x2 = centerX + rOuter * Math.cos(angleNext);
+                const y2 = centerY + rOuter * Math.sin(angleNext);
+                const x3 = centerX + rInner * Math.cos(angleNext);
+                const y3 = centerY + rInner * Math.sin(angleNext);
+                const x4 = centerX + rInner * Math.cos(angle);
+                const y4 = centerY + rInner * Math.sin(angle);
+                const color = numbersList[i].color === 'red' ? '#e74c3c' : (numbersList[i].color === 'black' ? '#222' : '#229954');
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                const d = [
+                    `M ${x1} ${y1}`,
+                    `A ${rOuter} ${rOuter} 0 0 1 ${x2} ${y2}`,
+                    `L ${x3} ${y3}`,
+                    `A ${rInner} ${rInner} 0 0 0 ${x4} ${y4}`,
+                    'Z'
+                ].join(' ');
+                path.setAttribute('d', d);
+                path.setAttribute('fill', color);
+                path.setAttribute('stroke', '#fff');
+                path.setAttribute('stroke-width', '1.2');
+                g.appendChild(path);
+
+                // Number label
+                const labelAngle = (angle + angleNext) / 2;
+                const labelR = (rOuter + rInner) / 2 + 8;
+                const lx = centerX + labelR * Math.cos(labelAngle);
+                const ly = centerY + labelR * Math.sin(labelAngle) + 4;
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute('x', lx);
+                text.setAttribute('y', ly);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('font-size', '16');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', '#fff');
+                text.setAttribute('paint-order', 'stroke');
+                text.setAttribute('stroke', '#222');
+                text.setAttribute('stroke-width', '1.5');
+                text.textContent = numbersList[i].number;
+                g.appendChild(text);
+            }
+        }
+
+        //Draw Table Layout
+        function drawTable() {
+            const table = document.getElementById('roulette-table-inner');
+            table.innerHTML = '';
+            const tr0 = document.createElement('tr');
+            const td0 = document.createElement('td');
+            td0.className = 'green';
+            td0.textContent = '0';
+            td0.setAttribute('data-value', '0');
+            td0.style.cursor = 'pointer';
+            tr0.appendChild(td0);
+            const td00 = document.createElement('td');
+            td00.className = 'green';
+            td00.textContent = '00';
+            td00.setAttribute('data-value', '00');
+            td00.style.cursor = 'pointer';
+            tr0.appendChild(td00);
+            for (let i = 0; i < 1; ++i) tr0.appendChild(document.createElement('td'));
+            table.appendChild(tr0);
+
+            for (let row = 0; row < 12; ++row) {
+                const tr = document.createElement('tr');
+                for (let col = 0; col < 3; ++col) {
+                    const num = row * 3 + col + 1;
+                    const numObj = numbersList.find(n => n.number == num);
+                    const td = document.createElement('td');
+                    td.textContent = num;
+                    td.setAttribute('data-value', num);
+                    td.className = numObj ? numObj.color : '';
+                    td.style.cursor = 'pointer';
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+        }
+
+        //Table Number Selection
+        function setupTableNumberSelection() {
+            const table = document.getElementById('roulette-table-inner');
+            table.addEventListener('click', function(e) {
+                const betType = betTypeBox.value;
+                if (betType !== 'straight') return;
+                const td = e.target.closest('td');
+                if (!td || !td.hasAttribute('data-value')) return;
+                table.querySelectorAll('td').forEach(cell => cell.classList.remove('selected'));
+                td.classList.add('selected');
+                let input = document.getElementById('bet-straight-value');
+                if (!input) {
+                    input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.id = 'bet-straight-value';
+                    input.required = true;
+                    document.getElementById('bet-options').appendChild(input);
+                }
+                input.value = td.getAttribute('data-value');
+            });
+            betTypeSelect.addEventListener('change', function() {
+                table.querySelectorAll('td').forEach(cell => cell.classList.remove('selected'));
+                let input = document.getElementById('bet-straight-value');
+                if (input) input.value = '';
+            });
+        }
+
+        //UI
+        betTypeSelect.addEventListener('change', function() {
+            const betType = betTypeSelect.value;
+            const table = document.getElementById('roulette-table-inner');
+            if (betType !== 'straight') {
+                table.querySelectorAll('td').forEach(cell => cell.classList.remove('selected'));
+            }
+        });
+
+        //Game Logic
+        function getRandomRouletteNumber() {
+            const idx = Math.floor(Math.random() * rouletteNumbers.length);
+            return rouletteNumbers[idx];
+        }
+
+        function isRed(num) {
+            return rouletteNumbers.find(n => n.value == num)?.color === 'red';
+        }
+        function isBlack(num) {
+            return rouletteNumbers.find(n => n.value == num)?.color === 'black';
+        }
+        function isGreen(num) {
+            return num === '0' || num === '00';
+        }
+        function isEven(num) {
+            if (typeof num === 'number') return num % 2 === 0;
+            if (!isNaN(num)) return Number(num) % 2 === 0;
+            return false;
+        }
+        function isOdd(num) {
+            if (typeof num === 'number') return num % 2 === 1;
+            if (!isNaN(num)) return Number(num) % 2 === 1;
+            return false;
+        }
+
+        function getDozen(num) {
+            if (typeof num === 'string') num = Number(num);
+            if (isNaN(num)) return null;
+            if (num >= 1 && num <= 12) return 1;
+            if (num >= 13 && num <= 24) return 2;
+            if (num >= 25 && num <= 36) return 3;
+            return null;
+        }
+        function getColumn(num) {
+            if (typeof num === 'string') num = Number(num);
+            if (isNaN(num)) return null;
+            if (num < 1 || num > 36) return null;
+            return ((num - 1) % 3) + 1;
+        }
+
+        // --- Payouts ---
+        function getPayout(type) {
+            switch(type) {
+                case 'straight': return 35;
+                case 'split': return 17;
+                case 'street': return 11;
+                case 'corner': return 8;
+                case 'sixline': return 5;
+                case 'topline': return 6; // 0,00,1,2,3
+                case 'color': return 1;
+                case 'evenodd': return 1;
+                case 'lowhigh': return 1;
+                case 'dozen': return 2;
+                case 'column': return 2;
+                default: return 0;
+            }
+        }
+
+        function parseNumbersList(val) {
+            if (Array.isArray(val)) return val.map(v => String(v));
+            if (typeof val === 'string') {
+                return val.split(',').map(s => s.trim()).filter(Boolean).map(s => String(s));
+            }
+            return [];
+        }
+
+        document.getElementById('bet-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = getCurrentUser();
+            if (!user) {
+                alert("You must be logged in to play!");
+                window.location.href = "main.html";
+                return;
+            }
+            let betType = betTypeSelect.value;
+            let bets = [];
+            let betAmount = parseInt(document.getElementById('bet-amount').value, 10);
+            if (isNaN(betAmount) || betAmount < 1) {
+                showResult("Please enter a valid bet amount.", false);
+                return;
+            }
+            if (betType === 'straight') {
+                let betValue = document.getElementById('bet-straight-value')?.value;
+                if (!betValue) {
+                    showResult("Please select a number to bet on.", false);
+                    return;
+                }
+                bets.push({ type: 'straight', value: betValue });
+            } else if (betType === 'multi') {
+                const checked = Array.from(document.querySelectorAll('.multi-bet-options input[type="checkbox"]:checked'));
+                if (checked.length === 0) {
+                    showResult("Please select at least one bet.", false);
+                    return;
+                }
+                checked.forEach(chk => {
+                    bets.push({ type: chk.getAttribute('data-type'), value: chk.getAttribute('data-value'), label: chk.parentElement.textContent.trim() });
+                });
+            } else if (betType === 'color') {
+                let betValue = (document.getElementById('bet-selected-value')?.value) || 'red';
+                bets.push({ type: 'color', value: betValue });
+            } else if (betType === 'evenodd') {
+                let betValue = (document.getElementById('bet-selected-value')?.value) || 'even';
+                bets.push({ type: 'evenodd', value: betValue });
+            } else if (betType === 'lowhigh') {
+                let betValue = (document.getElementById('bet-selected-value')?.value) || 'low';
+                bets.push({ type: 'lowhigh', value: betValue });
+            } else if (betType === 'dozen') {
+                let betValue = (document.getElementById('bet-selected-value')?.value) || '1';
+                bets.push({ type: 'dozen', value: betValue });
+            } else if (betType === 'column') {
+                let betValue = (document.getElementById('bet-selected-value')?.value) || '1';
+                bets.push({ type: 'column', value: betValue });
+            }
+
+            let balance = getUserBalance(user);
+
+            // For multi, split betAmount equally
+            let perBetAmount = betAmount;
+            if (betType === 'multi') {
+                perBetAmount = Math.floor(betAmount / bets.length);
+                if (perBetAmount < 1) {
+                    showResult("Bet amount too small for number of bets selected.", false);
+                    return;
+                }
+            }
+
+            // Check balance
+            let totalBet = (betType === 'multi') ? perBetAmount * bets.length : betAmount;
+            if (totalBet > balance) {
+                showResult("Insufficient balance!", false);
+                return;
+            }
+
+            // spin
+            const result = getRandomRouletteNumber();
+
+            // win/loss | result info
+            let totalWin = 0;
+            let winMessages = [];
+            let lostMessages = [];
+            let anyWin = false;
+
+            bets.forEach(bet => {
+                let win = false, payout = 0, winText = "";
+                if (bet.type === 'straight') {
+                    if (String(result.value) === String(bet.value)) {
+                        win = true;
+                        payout = perBetAmount * (getPayout('straight') + 1);
+                        winText = `Straight bet on <b>${bet.value}</b> pays 35:1.`;
+                    }
+                } else if (bet.type === 'split') {
+                    const list = parseNumbersList(bet.value);
+                    if (list.includes(String(result.value))) {
+                        win = true;
+                        payout = perBetAmount * (getPayout('split') + 1);
+                        winText = `Split bet pays 17:1.`;
+                    }
+                } else if (bet.type === 'street') {
+                    const list = parseNumbersList(bet.value);
+                    if (list.includes(String(result.value))) {
+                        win = true;
+                        payout = perBetAmount * (getPayout('street') + 1);
+                        winText = `Street bet pays 11:1.`;
+                    }
+                } else if (bet.type === 'corner') {
+                    const list = parseNumbersList(bet.value);
+                    if (list.includes(String(result.value))) {
+                        win = true;
+                        payout = perBetAmount * (getPayout('corner') + 1);
+                        winText = `Corner bet pays 8:1.`;
+                    }
+                } else if (bet.type === 'sixline') {
+                    const list = parseNumbersList(bet.value);
+                    if (list.includes(String(result.value))) {
+                        win = true;
+                        payout = perBetAmount * (getPayout('sixline') + 1);
+                        winText = `Six line bet pays 5:1.`;
+                    }
+                } else if (bet.type === 'topline') {
+                    const list = ['0','00','1','2','3'];
+                    if (list.includes(String(result.value))) {
+                        win = true;
+                        payout = perBetAmount * (getPayout('topline') + 1);
+                        winText = `Top line bet (0,00,1,2,3) pays 6:1.`;
+                    }
+                } else if (bet.type === 'color') {
+                    if (!isGreen(result.value) && result.color === bet.value) {
+                        win = true;
+                        payout = perBetAmount * (getPayout('color') + 1);
+                        winText = `Color bet on <b>${bet.value}</b> pays 1:1.`;
+                    }
+                } else if (bet.type === 'evenodd') {
+                    if (!isGreen(result.value)) {
+                        if (bet.value === 'even' && isEven(result.value)) {
+                            win = true;
+                            payout = perBetAmount * (getPayout('evenodd') + 1);
+                            winText = `Even/Odd bet on <b>${bet.value}</b> pays 1:1.`;
+                        } else if (bet.value === 'odd' && isOdd(result.value)) {
+                            win = true;
+                            payout = perBetAmount * (getPayout('evenodd') + 1);
+                            winText = `Even/Odd bet on <b>${bet.value}</b> pays 1:1.`;
+                        }
+                    }
+                } else if (bet.type === 'lowhigh') {
+                    if (!isGreen(result.value) && !isNaN(result.value)) {
+                        if (bet.value === 'low' && result.value >= 1 && result.value <= 18) {
+                            win = true;
+                            payout = perBetAmount * (getPayout('lowhigh') + 1);
+                            winText = `Low/High bet on <b>1-18</b> pays 1:1.`;
+                        } else if (bet.value === 'high' && result.value >= 19 && result.value <= 36) {
+                            win = true;
+                            payout = perBetAmount * (getPayout('lowhigh') + 1);
+                            winText = `Low/High bet on <b>19-36</b> pays 1:1.`;
+                        }
+                    }
+                } else if (bet.type === 'dozen') {
+                    if (!isGreen(result.value) && !isNaN(result.value)) {
+                        if (getDozen(result.value) == bet.value) {
+                            win = true;
+                            payout = perBetAmount * (getPayout('dozen') + 1);
+                            let dozenLabel = bet.value === "1" ? "1st 12" : (bet.value === "2" ? "2nd 12" : "3rd 12");
+                            winText = `Dozen bet on <b>${dozenLabel}</b> pays 2:1.`;
+                        }
+                    }
+                } else if (bet.type === 'column') {
+                    if (!isGreen(result.value) && !isNaN(result.value)) {
+                        if (getColumn(result.value) == bet.value) {
+                            win = true;
+                            payout = perBetAmount * (getPayout('column') + 1);
+                            winText = `Column bet on <b>${bet.value}st/nd/rd</b> pays 2:1.`;
+                        }
+                    }
+                }
+                if (win) {
+                    totalWin += payout;
+                    winMessages.push(winText);
+                    anyWin = true;
+                } else {
+                    lostMessages.push(
+                        bet.label
+                            ? `Lost bet: <b>${bet.label}</b>`
+                            : `Lost bet: <b>${bet.type} ${bet.value}</b>`
+                    );
+                }
+            });
+
+            // Update balance
+            if (anyWin) {
+                balance = balance - totalBet + totalWin;
+            } else {
+                balance -= totalBet;
+            }
+            setUserBalance(user, balance); //sync
+
+            // result messages
+            const winMsg = `<span style="color:#ffe066;">🎉 You won!</span><br>
+                The ball landed on <b>${result.value}</b> <span class="roulette-number ${result.color}" style="display:inline-block;width:1.5em;height:1.5em;vertical-align:middle;">&nbsp;</span>.<br>
+                ${winMessages.map(msg => `<div>${msg}</div>`).join('')}
+                ${lostMessages.length > 0 ? `<div style="color:#ffb3b3;">${lostMessages.join('<br>')}</div>` : ''}
+                <div>You won ${formatMoney(totalWin)}!</div>`;
+
+            const loseMsg = `<span style="color:#ffb3b3;">😢 You lost.</span><br>
+                The ball landed on <b>${result.value}</b> <span class="roulette-number ${result.color}" style="display:inline-block;width:1.5em;height:1.5em;vertical-align:middle;">&nbsp;</span>.<br>
+                ${lostMessages.join('<br>')}
+                <div>You lost ${formatMoney(totalBet)}.</div>`;
+
+            // Show result (not popup)
+            showResult(anyWin ? winMsg : loseMsg, anyWin);
+
+            // Animate ballzik
+            animateBall(result.value, function() {
+                showPopupResult(anyWin ? winMsg : loseMsg, anyWin);
+            });
+        });
+
+        function showResult(msg, win) {
+            const el = document.getElementById('result-message');
+            el.innerHTML = msg;
+            el.style.color = win ? '#ffe066' : '#ffb3b3';
+        }
+
+        //  popup 
+        function showPopupResult(msg, win) {
+            const winPlaque = document.getElementById('win-plaque');
+            const losePlaque = document.getElementById('lose-plaque');
+            if (winPlaque) winPlaque.style.display = 'none';
+            if (losePlaque) losePlaque.style.display = 'none';
+            if (win) {
+                if (winPlaque) {
+                    winPlaque.innerHTML = msg;
+                    winPlaque.style.display = 'block';
+                    setTimeout(() => { winPlaque.style.display = 'none'; }, 5000);
+                }
+            } else {
+                if (losePlaque) {
+                    losePlaque.innerHTML = msg;
+                    losePlaque.style.display = 'block';
+                    setTimeout(() => { losePlaque.style.display = 'none'; }, 5000);
+                }
+            }
+        }
+
+        // ballz animation
+        // accept optional callback after animation is finished
+        function animateBall(resultValue, onDone) {
+            const ball = document.getElementById('ball');
+            if (!ball) {
+                if (typeof onDone === "function") onDone();
+                return;
+            }
+            let idx = rouletteNumbers.findIndex(n => String(n.value) === String(resultValue));
+            if (idx < 0) idx = Math.floor(Math.random() * rouletteNumbers.length);
+            const n = rouletteNumbers.length;
+            // Convert index to angle around circle
+            const anglePer = 2 * Math.PI / n;
+            const startAngle = 0; // ball y=46 corresponds to -90deg; animate relatively
+            const targetAngle = (idx * anglePer);
+            // make it spin several times then land
+            const spins = 4 + Math.floor(Math.random() * 3);
+            const duration = 2200 + Math.floor(Math.random() * 900);
+            const start = performance.now();
+            const initialRotation = 0;
+            function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+            function frame(now) {
+                const t = Math.min(1, (now - start) / duration);
+                const eased = easeOutCubic(t);
+                const currentAngle = initialRotation + (spins * 2 * Math.PI + targetAngle - initialRotation) * eased;
+                // Determine ball cx,cy on circle radius
+                const centerX = 210, centerY = 210, r = 165;
+                const cx = centerX + r * Math.cos(currentAngle - Math.PI/2);
+                const cy = centerY + r * Math.sin(currentAngle - Math.PI/2);
+                ball.setAttribute('cx', cx);
+                ball.setAttribute('cy', cy);
+                ball.style.display = '';
+                if (t < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    // hide after brief pause
+                    setTimeout(() => {
+                        ball.style.display = 'none';
+                        if (typeof onDone === "function") onDone();
+                    }, 300);
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+
+        // --- On Load: Check Auth, Show Balance, Draw Wheel/Table ---
+        // --- MODIFIED: Request balance from main.html and add to this page's balance on entry ---
+        window.addEventListener('DOMContentLoaded', function() {
+            const user = getCurrentUser();
+            if (!user) {
+                alert("You must be logged in to play!");
+                window.location.href = "main.html";
+                return;
+            }
+
+            // Repeatedly ensure our balance matches the authoritative cookie/main.html
+            function startBalanceSyncLoop() {
+                const name = user;
+                let attempts = 0;
+                function tick() {
+                    attempts++;
+                    // Cookie is authoritative; read it and mirror into our cache/UI
+                    const cookieVal = getCookie('kazik_rs_' + name);
+                    const cookieBal = cookieVal === '' ? 0 : (parseInt(cookieVal, 10) || 0);
+                    const localBal = getUserBalance(name);
+                    if (localBal !== cookieBal) {
+                        setUserBalance(name, cookieBal);
+                    }
+                    updateBalanceBar();
+                    // Keep syncing for a short window, then slow down
+                    const delay = attempts < 10 ? 300 : 1500;
+                    // Stop after ~10s of stability
+                    if (attempts < 40) setTimeout(tick, delay);
+                }
+                tick();
+            }
+
+            startBalanceSyncLoop();
+            updateBalanceBar();
+            drawWheelSVG();
+            drawTable();
+            setupTableNumberSelection();
+        });
+
+        // --- Listen for main.html's balance request and respond if this is main.html ---
+        // (This code is harmless here, but only main.html will actually respond)
+        window.addEventListener("message", function(event) {
+            if (event.origin !== window.location.origin) return;
+            if (!event.data || typeof event.data !== "object") return;
+            if (event.data.type === "main-balance-request" && typeof window.getUserBalance === "function") {
+                // Only main.html should respond, but this is safe
+                const user = event.data.user;
+                const msgId = event.data.msgId;
+                let balance = 0;
+                try {
+                    balance = window.getUserBalance(user);
+                } catch (e) {}
+                event.source.postMessage({
+                    type: "main-balance-response",
+                    user: user,
+                    balance: balance,
+                    msgId: msgId
+                }, event.origin);
+            }
+        });
+    </script>
+</body>
+</html>
